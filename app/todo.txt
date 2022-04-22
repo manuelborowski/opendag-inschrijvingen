@@ -1,0 +1,30 @@
+Inschrijftool voor middenschool
+Velden
+· Leerlingnaam (verplicht OK)
+· Leerlingvoornaam (verplicht OK)
+· Leerling geboortedatum (verplicht)
+Er doken nu wel tikfouten op, datumgrenzen zijn optioneel handig (minstens 10 zijn op 01/09/xxxx)
+· Leerling geboortegemeente postnummer (verplicht was nu niet aanwezig)
+In wisa keuzelijst van alle Belgische gemeentes, mogelijk handig om net als bij nationaliteit te laten kiezen uit lijst ingeval het Belgisch is en een tekstveld te gebruiken voor buitenlandse geboortegemeente
+· Leerling geslacht M/V (verplicht was niet overal ingevuld)
+Noodzakelijk voor import dus verplicht maken bij invulling, nu invulmogelijkheden M of V
+· Leerling nationaliteit(code) (verplicht was nu niet aanwezig)
+Misschien interessanter om Belgisch te laten aanvinken en tekstveld om ‘niet Belgisch’ op te geven zodat het kan nagekeken en aangevuld worden
+· Leerling adres straat (verplicht OK)
+· Leerling adres straatnr (verplicht OK)
+· Leerling adres gemeente postnummer (verplicht OK)
+· Leerling adres gemeente omschrijving (niet verplicht OK)
+Wel interessant want is extra check voor deelgemeentes met zelfde postnummer
+· Datum inschrijving (verplicht, nu niet aanwezig)
+(startdatum in school, 01/09/xxxx) nu achteraf toegevoegd in excel, kan zo blijven
+· Datum en tijd aanmelding (in één veld date and timestamp) (verplicht OK)
+· Alle velden van de inschrijvende ouder
+Naam voornaam gsm emailadres nu slechts éénmaal invulbaar en zonder referentie, hier worden best telkens twee velden voorzien, één voor moeder en één voor vader. Op veld voor gsm-nummer een filter zetten om enkel cijfers toe te laten
+· Indicator (niet verplicht OK)
+Was 1 of 0 moet ingelezen worden als J of N, eventueel ineens zo exporteren?
+· Keuze studierichting (niet verplicht OK)
+In wisa wel te vertalen naar ‘klassen’ in het nieuwe schooljaar, dus een korte code (max 10 karakters per richting is handig
+Nog twee algemene opmerkingen:
+· De import moet gebeuren per instelling
+Dus best in de export een aparte kolom die de instelling vermeld waar de studierichting bij hoort of twee exportbestanden, één per school (SUL of SUI)
+· Er zijn nog meer velden die kunnen geïmporteerd worden, zoals RR nummer maar hier zal de afweging moeten gemaakt worden of het dan niet langer gaat duren en dus het doel voorbijstreeft

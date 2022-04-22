@@ -103,6 +103,7 @@ flask_app.config.from_pyfile('config.py')
 # V0.72: added over- and undercount to the registers.  Model: don't update properties when incorrect type.  Cleanup Guest callback
 # V0.73: added warnings
 # V0.74: log when registrationstatus is updated
+# V0.75: added todo.txt
 
 
 #TODO: add sequence numbers when on the waiting list.  Add them on the confirmation document?
@@ -121,7 +122,7 @@ flask_app.config.from_pyfile('config.py')
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.74', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.75', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 #  enable logging
