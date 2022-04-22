@@ -1,3 +1,4 @@
+import app.data.settings
 from app.application import formio as mformio, util as mutil, timeslot_configuration as matc, warning as mwarning
 from app.data import utils as mdutils, guest as mguest, settings as msettings, timeslot_configuration as mtc
 from app.data.guest import get_guests, get_guest_register_last_timestamp
@@ -149,7 +150,7 @@ class RegisterCache:
     guest_cache = {}
     register_cache = {}
     def __init__(self): #read the database and the register settings and initialize the caches
-        register_settings = mutil.get_json_template('student-register-settings')
+        register_settings = app.data.settings.get_json_template('student-register-settings')
         for r, d in register_settings.items():
             self.register_cache[r] = RegisterCache.Register(self, r, d['max-number-regular-registrations'],
                                       d['max-number-indicator-registrations'],
@@ -227,7 +228,7 @@ except Exception as e:
 
 def prepare_registration():
     try:
-        return {'template': mutil.get_json_template('student-register-template')}
+        return {'template': app.data.settings.get_json_template('student-register-template')}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         raise e
@@ -236,7 +237,7 @@ def prepare_registration():
 def prepare_edit_registration_form(code):
     try:
         guest = mguest.get_first_guest({"code": code})
-        template = mutil.get_json_template('student-register-template')
+        template = app.data.settings.get_json_template('student-register-template')
         available_timeslots = get_available_timeslots(guest.timeslot)
         mformio.update_available_timeslots(available_timeslots, template, 'radio-timeslot')
         template = mformio.prepare_for_edit(template, guest.flat())
@@ -249,7 +250,7 @@ def prepare_edit_registration_form(code):
 
 def prepare_add_registration_form():
     try:
-        template = mutil.get_json_template('student-register-template')
+        template = app.data.settings.get_json_template('student-register-template')
         template = mformio.prepare_for_add(template)
         return {'template': template}
     except Exception as e:
@@ -259,7 +260,7 @@ def prepare_add_registration_form():
 
 def get_confirmation_document(code):
     try:
-        template = mutil.get_json_template('student-web-response-template')
+        template = app.data.settings.get_json_template('student-web-response-template')
         guest = mguest.get_first_guest({'code': code})
         if _check_register_status(guest):
             template = mformio.prepare_sub_component(template, 'register-child-ack-document-ok', guest)
@@ -274,7 +275,7 @@ def get_confirmation_document(code):
 
 def registration_done(code):
     try:
-        template = mutil.get_json_template('student-web-response-template')
+        template = app.data.settings.get_json_template('student-web-response-template')
         guest = mguest.get_first_guest({'code': code})
         #check the register settings to see if the student is registered or is on the waiting list
         if _check_register_status(guest):
@@ -293,7 +294,7 @@ def registration_done(code):
 
 def timeslot_registration_done(code):
     try:
-        template = mutil.get_json_template('timeslot-web-response-template')
+        template = app.data.settings.get_json_template('timeslot-web-response-template')
         guest = mguest.get_first_guest({'code': code})
         template = mformio.prepare_sub_component(template, 'timeslot-register-ack-ok', guest)
         # send confirmation e-mail
@@ -330,17 +331,17 @@ def registration_add(data):
             if 'code' not in data:
                 data['code'] = mutil.create_random_string()
             if 'register_timestamp' in data and data['register_timestamp'] != '':
-                register_settings = mutil.get_json_template('student-register-settings')
+                register_settings = app.data.settings.get_json_template('student-register-settings')
                 register = data['field_of_study'].split('-')[0]
                 register_type = 'max-number-indicator-registrations' if data['indicator'] else 'max-number-regular-registrations'
                 register_settings[register][register_type] += 1
-                mutil.set_json_template('student-register-settings', register_settings)
+                app.data.settings.set_json_template('student-register-settings', register_settings)
                 data['register_timestamp'] = mformio.formiodate_to_datetime(data['register_timestamp'])
             if 'radio-timeslot' in data and data['radio-timeslot'] != '':
                 matc.flatten_timeslots()
                 ts = mformio.formiodate_to_datetime(data['timeslot'])
                 timeslot_compare = {'year': ts.year, 'month': ts.month, 'day': ts.day, 'hour': ts.hour, 'minute': ts.minute}
-                timeslot_settings = mutil.get_json_template('timeslot-config-timeslots-template')
+                timeslot_settings = app.data.settings.get_json_template('timeslot-config-timeslots-template')
                 found = False
                 for ts in timeslot_settings:
                     if timeslot_compare.items() <= ts.items():
@@ -349,7 +350,7 @@ def registration_add(data):
                         break
                 if not found:
                     return {"status": False, "data": f'error: timeslot {data["timeslot"]} not found for {data["email"]}'}
-                mutil.set_json_template('timeslot-config-timeslots-template', timeslot_settings)
+                app.data.settings.set_json_template('timeslot-config-timeslots-template', timeslot_settings)
             data['status'] = Guest.Status.E_REGISTERED
             guest = mguest.add_guest(data)
             log.info(f"New pre-registration: {guest.email}, {data}")
@@ -363,11 +364,11 @@ def registration_add(data):
         duplicate_guest = mguest.get_first_guest(data_selection)
         if duplicate_guest:
             #check if a guest can register on multiple registers
-            register_settings = mutil.get_json_template('student-register-settings')
+            register_settings = app.data.settings.get_json_template('student-register-settings')
             new_register = data['field_of_study'].split('-')[0]
             if 'multiple-registrations' not in register_settings[duplicate_guest.register] or new_register not in register_settings[duplicate_guest.register]['multiple-registrations']:
                 return {"status": False, "data": f"Fout, de student {duplicate_guest.child_first_name} {duplicate_guest.child_last_name} en mailadres {duplicate_guest.email}\n is reeds geregistreerd."}
-        misc_config = mutil.get_json_template('import-misc-fields')
+        misc_config = app.data.settings.get_json_template('import-misc-fields')
         extra_fields = [c['veldnaam'] for c in misc_config]
         extra_field = {f: '' for f in extra_fields}
         data['misc_field'] = json.dumps(extra_field)
@@ -395,19 +396,19 @@ def prepare_timeslot_registration(code=None):
     try:
         guest = mguest.get_first_guest({'code': code})
         if not guest:
-            template = mutil.get_json_template('timeslot-web-response-template')
+            template = app.data.settings.get_json_template('timeslot-web-response-template')
             template = mformio.prepare_sub_component(template, 'timeslot-register-error-wrong-code')
             return {'template': template}
         now = datetime.datetime.now()
         timeslot_registration_open = msettings.get_configuration_setting('timeslot-open-registration-at')
         timeslot_registration_open = mformio.formiodate_to_datetime(timeslot_registration_open)
         if now < timeslot_registration_open:
-            template = mutil.get_json_template('timeslot-web-response-template')
+            template = app.data.settings.get_json_template('timeslot-web-response-template')
             template = mformio.prepare_sub_component(template, 'timeslot-registration-not-open',
                                                      additional_fields={'timeslot_registration_open_dutch': mdutils.datetime_to_dutch_datetime_string(timeslot_registration_open)})
             return {'template': template}
         available_timeslots = get_available_timeslots(guest.timeslot)
-        template = mutil.get_json_template('timeslot-register-template')
+        template = app.data.settings.get_json_template('timeslot-register-template')
         mformio.update_available_timeslots(available_timeslots, template, 'radio-timeslot')
         data = {'template': template,'defaults': guest.flat()}
         return data

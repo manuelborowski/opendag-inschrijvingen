@@ -1,4 +1,5 @@
 import app.application.registration
+import app.data.settings
 from . import registration
 from app import log, supervisor_required
 from flask import redirect, url_for, request, render_template
@@ -16,7 +17,7 @@ import sys, datetime
 @supervisor_required
 def show():
     # start = datetime.datetime.now()
-    misc_config = mutil.get_json_template('import-misc-fields')
+    misc_config = app.data.settings.get_json_template('import-misc-fields')
     misc_fields = [c['veldnaam'] for c in misc_config]
     base_multiple_items.update(table_configuration, misc_fields)
     ret = base_multiple_items.show(table_configuration)
@@ -29,7 +30,7 @@ def show():
 @supervisor_required
 def table_ajax():
     # start = datetime.datetime.now()
-    misc_config = mutil.get_json_template('import-misc-fields')
+    misc_config = app.data.settings.get_json_template('import-misc-fields')
     misc_fields = [c['veldnaam'] for c in misc_config]
     base_multiple_items.update(table_configuration, misc_fields)
     ret =  base_multiple_items.ajax(table_configuration)
@@ -139,7 +140,7 @@ def get_misc_fields(extra_fields, form):
 
 
 def get_filters():
-    register_settings = mutil.get_json_template('student-register-settings')
+    register_settings = app.data.settings.get_json_template('student-register-settings')
     choices = [['default', 'Alles']]
     for reg, data in register_settings.items():
         choices.append([f"{reg}-N", f"{reg}"])

@@ -1,3 +1,4 @@
+import app.data.settings
 from app.data import settings as msettings, guest as mguest
 from app.application import formio as mformio, util as mutil
 from app.data.models import Guest
@@ -29,7 +30,7 @@ def send_register_ack(**kwargs):
             guest.enabled = False
             return False
 
-        template = mutil.get_json_template('student-email-response-template')
+        template = app.data.settings.get_json_template('student-email-response-template')
         if guest.status == guest.Status.E_REGISTERED:
             link = f'{msettings.get_configuration_setting("email-base-url")}/timeslot/register?code={guest.code}'
             email_subject = mformio.extract_sub_component(template, 'register-child-ack-ok-subject')['html']
@@ -67,7 +68,7 @@ def send_timeslot_register_ack(**kwargs):
             guest.enabled = False
             return False
 
-        template = mutil.get_json_template('timeslot-email-response-template')
+        template = app.data.settings.get_json_template('timeslot-email-response-template')
         link = f'{msettings.get_configuration_setting("email-base-url")}/timeslot/register?code={guest.code}'
         email_subject = mformio.extract_sub_component(template, 'timeslot-register-ack-ok-subject', guest)['html']
         email_content = mformio.extract_sub_component(template, 'timeslot-register-ack-ok-content', guest,

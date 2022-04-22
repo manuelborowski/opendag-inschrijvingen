@@ -1,9 +1,9 @@
 from app import log, db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import UniqueConstraint
-import datetime, json, time
+import json
 from babel.dates import get_day_names, get_month_names
+from app.data import settings as msettings
 
 
 # woensdag 24 februari om 14 uur
@@ -121,26 +121,7 @@ class User(UserMixin, db.Model):
                 'chbx': ''}
 
 
-class Settings(db.Model):
-    __tablename__ = 'settings'
-
-    class SETTING_TYPE:
-        E_INT = 'INT'
-        E_STRING = 'STRING'
-        E_FLOAT = 'FLOAT'
-        E_BOOL = 'BOOL'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(256))
-    value = db.Column(db.Text)
-    type = db.Column(db.String(256))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-
-    UniqueConstraint('name', 'user_id')
-
-    def log(self):
-        return '<Setting: {}/{}/{}/{}>'.format(self.id, self.name, self.value, self.type)
-
+field_of_study_to_dutch = msettings.get_translations('field_of_study')
 
 class Guest(db.Model):
     __tablename__ = 'guests'
@@ -153,18 +134,6 @@ class Guest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(256))
     last_login = db.Column(db.DateTime())
-
-    field_of_study_to_dutch = {
-        "1a SUL-klassieke-talen": "Klassieke Talen",
-        "1a SUL-moderneTalenEnWetenschappen": "Moderne talen en wetenschappen",
-        "1a SUL-sport-en-wetenschappen": "Sport en wetenschappen",
-        "1a SUL-stem": "STEM",
-        "1a SUI-bedrijfEnOrganisatie": "Bedrijf en organisatie",
-        "1a SUI-cultuurEnMedia": "Cultuur en Media",
-        "1a SUI-finseCademie": "Finse @cademie",
-        "1a SUI-maatschappijEnWelzijn": "Maatschappij en welzijn",
-        "1b-1B": "1b",
-    }
 
     invite_email_tx = db.Column(db.Boolean, default=True)   #invite email is sent
     invite_nbr_tx = db.Column(db.Integer(), default=0)      #nbr of invite emails sent
@@ -267,7 +236,7 @@ class Guest(db.Model):
         'note': self.note,
         'national_registration_number': self.national_registration_number,
         'field_of_study': self.field_of_study,
-        'field_of_study_dutch': Guest.field_of_study_to_dutch[self.field_of_study],
+        'field_of_study_dutch': field_of_study_to_dutch[self.field_of_study],
         'register': self.field_of_study.split('-')[0],
         'indicator': self.indicator,
         'indicator_dutch': 'I' if self.indicator else '',

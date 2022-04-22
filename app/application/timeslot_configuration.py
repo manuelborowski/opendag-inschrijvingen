@@ -1,3 +1,4 @@
+import app.data.settings
 from app.data import timeslot_configuration as mtc, settings as msettings
 from app.application import util as mutil
 from app import log, db
@@ -37,7 +38,7 @@ def flatten_timeslots():
     if msettings.get_configuration_setting('timeslot-config-timeslots-is-flat'):
         return
     flat = []
-    timeslot_settings = mutil.get_json_template('timeslot-config-timeslots-template')
+    timeslot_settings = app.data.settings.get_json_template('timeslot-config-timeslots-template')
     for t in timeslot_settings:
         start_time = datetime.datetime(t['year'], t['month'], t['day'], t['hour'], t['minute'])
         length = t['length']
@@ -55,5 +56,5 @@ def flatten_timeslots():
                 'number': 1,
                 'places': places
             })
-    mutil.set_json_template('timeslot-config-timeslots-template', flat)
+    app.data.settings.set_json_template('timeslot-config-timeslots-template', flat)
     msettings.set_configuration_setting('timeslot-config-timeslots-is-flat', True)

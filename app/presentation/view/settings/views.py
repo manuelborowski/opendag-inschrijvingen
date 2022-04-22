@@ -79,6 +79,14 @@ settings_formio = \
                 "key": "generic-enable-send-ack-email",
                 "type": "checkbox",
                 "input": true
+              },
+              {
+                "label": "Translations",
+                "autoExpand": false,
+                "tableView": true,
+                "key": "generic-translations",
+                "type": "textarea",
+                "input": true
               }
             ]
           }

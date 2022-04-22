@@ -1,8 +1,32 @@
+import re
+import sys
+
 from flask_login import current_user
-from app.data.models import Settings
-from app import log
-from app import db
+from app import log, db
+from sqlalchemy import UniqueConstraint
 import json
+
+
+class Settings(db.Model):
+    __tablename__ = 'settings'
+
+    class SETTING_TYPE:
+        E_INT = 'INT'
+        E_STRING = 'STRING'
+        E_FLOAT = 'FLOAT'
+        E_BOOL = 'BOOL'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(256))
+    value = db.Column(db.Text)
+    type = db.Column(db.String(256))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+
+    UniqueConstraint('name', 'user_id')
+
+    def log(self):
+        return '<Setting: {}/{}/{}/{}>'.format(self.id, self.name, self.value, self.type)
+
 
 
 # return: found, value
@@ -53,19 +77,20 @@ def get_test_server():
 
 default_configuration_settings = {
     'generic-enable-send-ack-email': (False, Settings.SETTING_TYPE.E_BOOL),
+    'generic-translations': ('{}', Settings.SETTING_TYPE.E_STRING),
 
     'student-register-arm-send-ack-mail': (False, Settings.SETTING_TYPE.E_BOOL),
-    'student-register-template': ('', Settings.SETTING_TYPE.E_STRING),
-    'student-web-response-template': ('', Settings.SETTING_TYPE.E_STRING),
-    'student-email-response-template': ('', Settings.SETTING_TYPE.E_STRING),
-    'student-register-settings': ('', Settings.SETTING_TYPE.E_STRING),
+    'student-register-template': ('{}', Settings.SETTING_TYPE.E_STRING),
+    'student-web-response-template': ('{}', Settings.SETTING_TYPE.E_STRING),
+    'student-email-response-template': ('{}', Settings.SETTING_TYPE.E_STRING),
+    'student-register-settings': ('{}', Settings.SETTING_TYPE.E_STRING),
 
     'timeslot-register-arm-send-ack-mail': (False, Settings.SETTING_TYPE.E_BOOL),
-    'timeslot-register-template': ('', Settings.SETTING_TYPE.E_STRING),
-    'timeslot-web-response-template': ('', Settings.SETTING_TYPE.E_STRING),
-    'timeslot-email-response-template': ('', Settings.SETTING_TYPE.E_STRING),
-    'timeslot-open-registration-at': ('', Settings.SETTING_TYPE.E_STRING),
-    'timeslot-config-timeslots-template': ('', Settings.SETTING_TYPE.E_STRING),
+    'timeslot-register-template': ('{}', Settings.SETTING_TYPE.E_STRING),
+    'timeslot-web-response-template': ('{}', Settings.SETTING_TYPE.E_STRING),
+    'timeslot-email-response-template': ('{}', Settings.SETTING_TYPE.E_STRING),
+    'timeslot-open-registration-at': ('{}', Settings.SETTING_TYPE.E_STRING),
+    'timeslot-config-timeslots-template': ('{}', Settings.SETTING_TYPE.E_STRING),
     'timeslot-config-timeslots-is-flat': (False, Settings.SETTING_TYPE.E_BOOL),
 
     'email-task-interval': (10, Settings.SETTING_TYPE.E_INT),
@@ -73,6 +98,9 @@ default_configuration_settings = {
     'email-send-max-retries': (2, Settings.SETTING_TYPE.E_INT),
     'email-base-url': ('localhost:5000', Settings.SETTING_TYPE.E_STRING),
     'email-enable-send-email': (False, Settings.SETTING_TYPE.E_BOOL),
+
+    'import-misc-fields': ('{}', Settings.SETTING_TYPE.E_STRING),
+
 }
 
 
@@ -110,6 +138,29 @@ def subscribe_setting_changed(setting, cb, opaque):
     return True
 
 
+def get_translations(key):
+    translations = get_json_template('generic-translations')
+    return translations[key] if key in translations else {}
 
 # save settings which are not in the database yet
 # get_configuration_settings()
+
+def get_json_template(key):
+    template_string = get_configuration_setting(key)
+    if template_string == '':
+        template_string = '{}'
+        log.error(f'{sys._getframe().f_code.co_name}: Empty template: {key}')
+    try:
+        settings = json.loads(template_string)
+    except json.JSONDecodeError as e:
+        raise Exception(f'Template has invalid JSON syntax: {key} {e}')
+    return settings
+
+
+def set_json_template(key, data):
+    try:
+        template_string = json.dumps(data)
+        template_string = re.sub('},', '},\n', template_string)
+        return set_configuration_setting(key, template_string)
+    except json.JSONDecodeError as e:
+        raise Exception(f'Template has invalid JSON syntax: {key}, {data}, {e}')
